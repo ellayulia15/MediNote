@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Pasien</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="p-8">
+    <h1 class="text-2xl font-bold mb-4">Daftar Pasien</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-lg font-semibold mb-4">Tambah Pasien Baru</h2>
+        <form action="/add" method="post" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Pasien</label>
+                <input type="text" name="nama" id="nama" placeholder="Masukkan nama lengkap" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div>
+                <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tanggal Lahir
+                    <span class="text-gray-500 text-xs">(tanggal kelahiran pasien)</span>
+                </label>
+                <input type="date" name="tanggal_lahir" id="tanggal_lahir" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div>
+                <label for="tanggal_kunjungan" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tanggal Kunjungan
+                    <span class="text-gray-500 text-xs">(tanggal periksa/berobat)</span>
+                </label>
+                <input type="date" name="tanggal_kunjungan" id="tanggal_kunjungan" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            
+            <div>
+                <label for="diagnosis" class="block text-sm font-medium text-gray-700 mb-1">Diagnosis</label>
+                <input type="text" name="diagnosis" id="diagnosis" placeholder="Diagnosis penyakit" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <label for="tindakan" class="block text-sm font-medium text-gray-700 mb-1">Tindakan Medis</label>
+                <input type="text" name="tindakan" id="tindakan" placeholder="Tindakan yang dilakukan" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+                <label for="dokter" class="block text-sm font-medium text-gray-700 mb-1">Nama Dokter</label>
+                <input type="text" name="dokter" id="dokter" placeholder="Dokter yang menangani" 
+                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="md:col-span-2 lg:col-span-3">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-md transition duration-200">
+                    Tambah Pasien
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <table class="table-auto border-collapse border border-gray-300 w-full">
+        <thead>
+            <tr class="bg-gray-200">
+                <th class="border p-2">ID</th>
+                <th class="border p-2">Nama</th>
+                <th class="border p-2">Tanggal Lahir</th>
+                <th class="border p-2">Tanggal Kunjungan</th>
+                <th class="border p-2">Diagnosis</th>
+                <th class="border p-2">Tindakan</th>
+                <th class="border p-2">Dokter</th>
+                <th class="border p-2">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in patients %}
+            <tr>
+                <td class="border p-2">{{ p.id }}</td>
+                <td class="border p-2">{{ p.nama }}</td>
+                <td class="border p-2">{{ p.tanggal_lahir }}</td>
+                <td class="border p-2">{{ p.tanggal_kunjungan }}</td>
+                <td class="border p-2">{{ p.diagnosis }}</td>
+                <td class="border p-2">{{ p.tindakan }}</td>
+                <td class="border p-2">{{ p.dokter }}</td>
+                <td class="border p-2">
+                    <a href="/edit/{{ p.id }}" class="bg-blue-500 text-white px-2 py-1 text-sm rounded mr-1">Edit</a>
+                    <form method="post" action="/delete/{{ p.id }}" class="inline" 
+                          onsubmit="return confirm('Yakin ingin menghapus pasien {{ p.nama }}?')">
+                        <button type="submit" class="bg-red-500 text-white px-2 py-1 text-sm rounded">Hapus</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+
+</html>
