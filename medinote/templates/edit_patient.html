@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Pasien</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-4">Edit Pasien</h1>
+
+        <form action="/edit/{{ patient.id }}" method="post" class="space-y-4">
+            <div>
+                <label for="nama" class="block text-sm font-medium text-gray-700">Nama Pasien</label>
+                <input type="text" name="nama" id="nama" value="{{ patient.nama }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div>
+                <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700">
+                    Tanggal Lahir
+                    <span class="text-gray-500 text-xs">(tanggal kelahiran pasien)</span>
+                </label>
+                <input type="date" name="tanggal_lahir" id="tanggal_lahir" value="{{ patient.tanggal_lahir }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div>
+                <label for="tanggal_kunjungan" class="block text-sm font-medium text-gray-700">
+                    Tanggal Kunjungan
+                    <span class="text-gray-500 text-xs">(tanggal periksa/berobat)</span>
+                </label>
+                <input type="date" name="tanggal_kunjungan" id="tanggal_kunjungan" value="{{ patient.tanggal_kunjungan }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+
+            <div>
+                <label for="diagnosis" class="block text-sm font-medium text-gray-700">Diagnosis</label>
+                <input type="text" name="diagnosis" id="diagnosis" value="{{ patient.diagnosis or '' }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="tindakan" class="block text-sm font-medium text-gray-700">Tindakan Medis</label>
+                <input type="text" name="tindakan" id="tindakan" value="{{ patient.tindakan or '' }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div>
+                <label for="dokter" class="block text-sm font-medium text-gray-700">Nama Dokter</label>
+                <input type="text" name="dokter" id="dokter" value="{{ patient.dokter or '' }}" 
+                       class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Update Pasien
+                </button>
+                <a href="/" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Batal
+                </a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

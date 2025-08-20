@@ -1,58 +1,128 @@
-# 🏥 MediNote
+# MediNote - Sistem Manajemen Data Pasien
 
-**MediNote** is a simple patient management system built with **FastAPI**, **PostgreSQL**, **HTML**, and **Tailwind CSS**.  
-This project was developed as part of a candidate technical test to demonstrate backend, frontend, and database integration skills.  
+## Deskripsi
+MediNote adalah aplikasi web untuk mengelola data pasien dengan fitur lengkap termasuk dashboard, filter, import/export, dan role-based access control.
 
-## 🚀 Features
-- **CRUD Patients** → Add, view, edit, and delete patient records.  
-- **User Authentication** → Simple login using **Firebase**.  
-- **Role-Based Access Control (RBAC)** → 
-  - Doctor → can add/edit/delete patients.  
-  - Admin → can only view patients.  
-- **Dashboard & Reports** → Summary of patients, daily count, detailed table view, and filter by visit date.  
-- **Integration Tools** →  
-  - Import patient data via JSON (dummy endpoint).  
-  - Export patient data to Excel.  
+## Fitur Utama
 
-## 🛠️ Tech Stack
-- **Backend**: FastAPI (Python)  
-- **Database**: PostgreSQL (SQLAlchemy ORM)  
-- **Frontend**: HTML + Tailwind CSS (Jinja2 templates)  
-- **Authentication**: Firebase  
-- **Other Tools**: OpenPyXL (Excel export)  
+### Level 4 - Dashboard & CRUD
+- ✅ Dashboard dengan statistik pasien
+- ✅ CRUD operations (Create, Read, Update, Delete)
+- ✅ Role-based access (Doctor vs Admin)
+- ✅ Filter data berdasarkan tanggal kunjungan
+- ✅ Responsive UI dengan Tailwind CSS
 
-## 📂 Project Structure
+### Level 5 - Import/Export
+- ✅ Import data pasien dari file JSON
+- ✅ Export data pasien ke Excel (.xlsx)
+- ✅ Validasi data import
+- ✅ Filter berlaku pada export
+
+## Struktur Project
+
+```
 medinote/
-- │── main.py # FastAPI entry point
-- │── database.py # Database connection (PostgreSQL)
-- │── models.py # SQLAlchemy models
-- │── schemas.py # Pydantic schemas
-- │── crud.py # CRUD operations
-- │── templates/ # HTML templates (Jinja2 + Tailwind)
-- │── static/ # Static files (if needed)
+├── main.py          # FastAPI application & routes
+├── models.py        # SQLAlchemy database models
+├── schemas.py       # Pydantic schemas untuk API
+├── crud.py          # Database operations
+├── database.py      # Database configuration
+├── requirements.txt # Python dependencies
+├── templates/       # Jinja2 HTML templates
+│   ├── dashboard.html
+│   ├── edit_patient.html
+│   ├── login.html
+│   └── register.html
+└── static/          # Static files (CSS, JS, images)
+```
 
-## ⚙️ Installation & Setup
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/medinote.git
-   cd medinote
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate   # Linux/Mac
-   venv\Scripts\activate      # Windows
-3. Install dependencies:
+## Instalasi & Menjalankan
+
+1. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
-4. Setup PostgreSQL database and update DATABASE_URL in database.py.
-5. Run the FastAPI server:
-   ```bash
-   uvicorn main:app --reload
-6. Open in browser:
-   ```bash
-   http://127.0.0.1:8000
+   ```
 
-## ✨ Future Improvements
-- Better UI design with Tailwind components.
-- Deploy to VPS (AWS/IDCloudHost).
-- Enhance authentication (JWT / OAuth2).
+2. **Jalankan Server**
+   ```bash
+   python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
+
+3. **Akses Aplikasi**
+   - URL: `http://localhost:8000`
+   - Default user: `admin` / `admin123` (role: Admin)
+   - Default user: `doctor` / `doctor123` (role: Doctor)
+
+## Teknologi yang Digunakan
+
+- **Backend**: FastAPI, SQLAlchemy, SQLite
+- **Frontend**: Jinja2 Templates, Tailwind CSS
+- **Export**: pandas, openpyxl (Excel)
+- **Authentication**: Session-based auth
+- **Database**: SQLite (development)
+
+## API Endpoints
+
+### Auth
+- `GET /` - Halaman utama (redirect ke dashboard jika login)
+- `GET /login` - Halaman login
+- `POST /auth/login` - Login user
+- `GET /register` - Halaman register
+- `POST /auth/register` - Register user baru
+- `POST /auth/logout` - Logout user
+
+### Dashboard & Data
+- `GET /dashboard` - Dashboard utama dengan statistik dan data
+- `GET /patients` - Redirect ke dashboard (unified interface)
+
+### CRUD Operations
+- `POST /add` - Tambah pasien baru
+- `GET /edit/{patient_id}` - Form edit pasien
+- `POST /update/{patient_id}` - Update data pasien
+- `POST /delete/{patient_id}` - Hapus pasien
+
+### Import/Export
+- `POST /api/import/patients/json` - Import data dari JSON
+- `GET /export/patients/excel` - Export data ke Excel
+
+## Database Schema
+
+### Users Table
+- `id`: Integer (Primary Key)
+- `username`: String (Unique)
+- `hashed_password`: String
+- `role`: Enum (doctor, admin)
+
+### Patients Table
+- `id`: Integer (Primary Key)
+- `nama`: String (required)
+- `tanggal_lahir`: Date (required)
+- `tanggal_kunjungan`: Date (required)
+- `diagnosis`: String (optional)
+- `tindakan`: String (optional)
+- `dokter`: String (optional)
+
+## Role Permissions
+
+### Doctor
+- ✅ View dashboard & statistics
+- ✅ Add new patients
+- ✅ Edit existing patients
+- ✅ Delete patients
+- ✅ Import data from JSON
+- ✅ Export data to Excel
+- ✅ Filter data by date range
+
+### Admin
+- ✅ View dashboard & statistics
+- ❌ Add/Edit/Delete patients
+- ✅ Export data to Excel
+- ✅ Filter data by date range
+
+## Development Notes
+
+- Clean code structure dengan separation of concerns
+- Responsive design untuk mobile dan desktop
+- Error handling dan validasi data
+- Session-based authentication
+- SQL injection protection dengan SQLAlchemy ORM
