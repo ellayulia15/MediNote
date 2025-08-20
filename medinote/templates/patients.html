@@ -14,17 +14,24 @@
 
 <body class="gradient-bg min-h-screen">
     <div class="container mx-auto px-4 py-8">
-        <!-- Header with User Info and Logout -->
+        <!-- Header with User Info and Navigation -->
         <div class="flex justify-between items-center mb-6 bg-white rounded-lg shadow-md p-4">
-            <h1 class="text-2xl font-bold text-gray-800">🏥 MediNote - Daftar Pasien</h1>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">🏥 MediNote - Data Pasien</h1>
+                <p class="text-sm text-gray-600">Kelola data pasien dan riwayat kunjungan</p>
+            </div>
             
             <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-600">
-                    Selamat datang, <strong class="text-blue-600">{{ current_user.username }}</strong>
-                    <span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                        {{ current_user.role.value.title() }}
-                    </span>
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    {{ current_user.role.value.title() }}
                 </span>
+                <span class="text-sm text-gray-600">
+                    <strong class="text-blue-600">{{ current_user.username }}</strong>
+                </span>
+                <a href="/dashboard" 
+                   class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    📊 Dashboard
+                </a>
                 <a href="/auth/logout" 
                    class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
                     🚪 Logout

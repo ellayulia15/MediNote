@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MediNote</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header with User Info and Navigation -->
+        <div class="flex justify-between items-center mb-6 bg-white rounded-lg shadow-md p-4">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">🏥 MediNote - Dashboard</h1>
+                <p class="text-sm text-gray-600">Ringkasan dan Laporan Data Pasien</p>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    {{ current_user.role.value.title() }}
+                </span>
+                <span class="text-sm text-gray-600">
+                    <strong class="text-blue-600">{{ current_user.username }}</strong>
+                </span>
+                <a href="/patients" 
+                   class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    📋 Data Pasien
+                </a>
+                <a href="/auth/logout" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    🚪 Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Dashboard Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Total Patients Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <span class="text-2xl">👥</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-700">Total Pasien</h3>
+                        <p class="text-3xl font-bold text-blue-600">{{ statistics.total_patients }}</p>
+                        <p class="text-sm text-gray-500">Keseluruhan pasien terdaftar</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Patients Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <span class="text-2xl">📅</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium text-gray-700">Pasien Hari Ini</h3>
+                        <p class="text-3xl font-bold text-green-600">{{ statistics.patients_today }}</p>
+                        <p class="text-sm text-gray-500">Kunjungan pada {{ today }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">🔍 Filter Laporan</h2>
+            <form method="GET" action="/dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tanggal Mulai
+                    </label>
+                    <input type="date" 
+                           id="start_date" 
+                           name="start_date" 
+                           value="{{ start_date or '' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tanggal Selesai
+                    </label>
+                    <input type="date" 
+                           id="end_date" 
+                           name="end_date" 
+                           value="{{ end_date or '' }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex space-x-2">
+                    <button type="submit" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-md transition duration-200">
+                        🔍 Filter
+                    </button>
+                    <a href="/dashboard" 
+                       class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
+                        🔄 Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Patients Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-800">
+                    📋 Detail Pasien
+                    {% if start_date or end_date %}
+                        <span class="text-sm font-normal text-gray-600">
+                            ({{ filtered_patients|length }} hasil)
+                        </span>
+                    {% endif %}
+                </h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="table-auto border-collapse w-full">
+                    <thead>
+                        <tr class="bg-blue-50 border-b border-blue-200">
+                            <th class="text-left p-3 font-medium text-blue-800">ID</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Nama</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Tanggal Kunjungan</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Diagnosis</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Tindakan</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Dokter</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if filtered_patients %}
+                            {% for p in filtered_patients %}
+                            <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
+                                <td class="p-3 text-gray-700">{{ p.id }}</td>
+                                <td class="p-3 text-gray-700 font-medium">{{ p.nama }}</td>
+                                <td class="p-3 text-gray-600">{{ p.tanggal_kunjungan }}</td>
+                                <td class="p-3 text-gray-700">{{ p.diagnosis or '-' }}</td>
+                                <td class="p-3 text-gray-700">{{ p.tindakan or '-' }}</td>
+                                <td class="p-3 text-gray-700">{{ p.dokter or '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="p-8 text-center text-gray-500">
+                                    📋 Tidak ada data pasien untuk filter yang dipilih
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Info -->
+        {% if start_date or end_date %}
+        <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center">
+                <span class="text-blue-600 text-xl mr-2">📊</span>
+                <div>
+                    <h3 class="font-medium text-blue-800">Ringkasan Filter</h3>
+                    <p class="text-sm text-blue-700">
+                        {% if start_date and end_date %}
+                            Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai {{ end_date }}
+                        {% elif start_date %}
+                            Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai sekarang
+                        {% elif end_date %}
+                            Menampilkan {{ filtered_patients|length }} pasien sampai {{ end_date }}
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

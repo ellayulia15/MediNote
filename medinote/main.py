@@ -134,13 +134,61 @@ def require_view_permission(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
-    """Home page - redirect to login if not authenticated"""
+    """Home page - redirect to dashboard if authenticated"""
     current_user = get_current_user_from_session(request, db)
     if not current_user:
         # User not logged in, redirect to login
         return RedirectResponse("/login", status_code=302)
     
-    # User is logged in, show patients page
+    # User is logged in, redirect to dashboard
+    return RedirectResponse("/dashboard", status_code=302)
+
+@app.get("/dashboard")
+def dashboard(
+    request: Request, 
+    start_date: str = None,
+    end_date: str = None,
+    current_user = Depends(require_view_permission),
+    db: Session = Depends(get_db)
+):
+    """Dashboard with statistics and filtered patient data"""
+    from datetime import date, datetime
+    
+    # Get dashboard statistics
+    statistics = crud.get_dashboard_statistics(db)
+    
+    # Parse date filters
+    parsed_start_date = None
+    parsed_end_date = None
+    
+    if start_date:
+        try:
+            parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    
+    if end_date:
+        try:
+            parsed_end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    
+    # Get filtered patients
+    filtered_patients = crud.get_patients_by_date_range(db, parsed_start_date, parsed_end_date)
+    
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "current_user": current_user,
+        "statistics": statistics,
+        "filtered_patients": filtered_patients,
+        "start_date": start_date,
+        "end_date": end_date,
+        "today": date.today().strftime("%d %B %Y")
+    })
+
+@app.get("/patients")
+def patients_page(request: Request, current_user = Depends(require_view_permission), db: Session = Depends(get_db)):
+    """Patients page - show all patients with CRUD operations"""
     patients = crud.get_patients(db)
     return templates.TemplateResponse("patients.html", {
         "request": request, 
@@ -274,7 +322,7 @@ def add_patient(
         dokter=dokter
     )
     crud.create_patient(db, patient)
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/patients", status_code=303)
 
 @app.get("/edit/{patient_id}")
 def edit_patient_form(
@@ -313,7 +361,7 @@ def update_patient(
     updated_patient = crud.update_patient(db, patient_id, update_data)
     if not updated_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/patients", status_code=303)
 
 @app.post("/delete/{patient_id}")
 def delete_patient(
@@ -324,7 +372,7 @@ def delete_patient(
     deleted_patient = crud.delete_patient(db, patient_id)
     if not deleted_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/patients", status_code=303)
 
 # API Endpoints (JSON responses) - Protected with Firebase Auth
 @app.get("/api/patients", response_model=list[schemas.PatientOut])
