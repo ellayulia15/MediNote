@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
-from datetime import datetime, timedelta
+from sqlalchemy import or_, func, and_
+from datetime import datetime, timedelta, date
 import hashlib
 import secrets
 from . import models, schemas
@@ -8,6 +8,34 @@ from . import models, schemas
 # Patient CRUD Operations
 def get_patients(db: Session):
     return db.query(models.Patient).all()
+
+def get_patients_by_date_range(db: Session, start_date: date = None, end_date: date = None):
+    """Get patients filtered by date range"""
+    query = db.query(models.Patient)
+    
+    if start_date:
+        query = query.filter(models.Patient.tanggal_kunjungan >= start_date)
+    if end_date:
+        query = query.filter(models.Patient.tanggal_kunjungan <= end_date)
+    
+    return query.order_by(models.Patient.tanggal_kunjungan.desc()).all()
+
+def get_dashboard_statistics(db: Session):
+    """Get dashboard statistics for Level 4 requirements"""
+    today = date.today()
+    
+    # Total patients
+    total_patients = db.query(func.count(models.Patient.id)).scalar()
+    
+    # Patients today
+    patients_today = db.query(func.count(models.Patient.id)).filter(
+        models.Patient.tanggal_kunjungan == today
+    ).scalar()
+    
+    return {
+        "total_patients": total_patients or 0,
+        "patients_today": patients_today or 0
+    }
 
 def get_patient(db: Session, patient_id: int):
     return db.query(models.Patient).filter(models.Patient.id == patient_id).first()
