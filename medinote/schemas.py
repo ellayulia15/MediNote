@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 from datetime import date, datetime
 from typing import Optional
+from enum import Enum
+
+# Role Enum for validation
+class UserRole(str, Enum):
+    DOCTOR = "doctor"
+    ADMIN = "admin"
 
 # Patient Schemas
 class PatientBase(BaseModel):
@@ -37,6 +43,7 @@ class UserBase(BaseModel):
     username: str
     email: str
     full_name: Optional[str] = None
+    role: UserRole = UserRole.DOCTOR
 
 class UserCreate(UserBase):
     password: str  # Plain password, will be hashed
@@ -50,6 +57,7 @@ class UserUpdate(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
+    role: Optional[UserRole] = None
 
 class UserOut(UserBase):
     id: int

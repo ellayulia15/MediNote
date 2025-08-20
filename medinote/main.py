@@ -120,6 +120,18 @@ def require_authenticated_user(request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
 
+def require_doctor_role(request: Request, db: Session = Depends(get_db)):
+    """Dependency to require doctor role for add/edit/delete operations"""
+    user = require_authenticated_user(request, db)
+    crud.require_permission(user, "add")  # Will check if user can add/edit/delete
+    return user
+
+def require_view_permission(request: Request, db: Session = Depends(get_db)):
+    """Dependency to require view permission (both doctor and admin)"""
+    user = require_authenticated_user(request, db)
+    crud.require_permission(user, "view")  # Both roles can view
+    return user
+
 @app.get("/")
 def home(request: Request, db: Session = Depends(get_db)):
     """Home page - redirect to login if not authenticated"""
@@ -250,6 +262,7 @@ def add_patient(
     diagnosis: str = Form(""),
     tindakan: str = Form(""),
     dokter: str = Form(""),
+    current_user = Depends(require_doctor_role),  # Only doctors can add
     db: Session = Depends(get_db)
 ):
     patient = schemas.PatientCreate(
@@ -264,7 +277,12 @@ def add_patient(
     return RedirectResponse("/", status_code=303)
 
 @app.get("/edit/{patient_id}")
-def edit_patient_form(request: Request, patient_id: int, db: Session = Depends(get_db)):
+def edit_patient_form(
+    request: Request, 
+    patient_id: int, 
+    current_user = Depends(require_doctor_role),  # Only doctors can edit
+    db: Session = Depends(get_db)
+):
     patient = crud.get_patient(db, patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
@@ -279,6 +297,7 @@ def update_patient(
     diagnosis: str = Form(""),
     tindakan: str = Form(""),
     dokter: str = Form(""),
+    current_user = Depends(require_doctor_role),  # Only doctors can edit
     db: Session = Depends(get_db)
 ):
     patient_data = schemas.PatientFormUpdate(
@@ -297,7 +316,11 @@ def update_patient(
     return RedirectResponse("/", status_code=303)
 
 @app.post("/delete/{patient_id}")
-def delete_patient(patient_id: int, db: Session = Depends(get_db)):
+def delete_patient(
+    patient_id: int, 
+    current_user = Depends(require_doctor_role),  # Only doctors can delete
+    db: Session = Depends(get_db)
+):
     deleted_patient = crud.delete_patient(db, patient_id)
     if not deleted_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
