@@ -1,6 +1,11 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from datetime import datetime, timedelta
+import hashlib
+import secrets
 from . import models, schemas
 
+# Patient CRUD Operations
 def get_patients(db: Session):
     return db.query(models.Patient).all()
 
@@ -30,3 +35,120 @@ def delete_patient(db: Session, patient_id: int):
         db.delete(db_patient)
         db.commit()
     return db_patient
+
+# User CRUD Operations
+def get_password_hash(password: str) -> str:
+    """Hash password using SHA256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify password against hash"""
+    return get_password_hash(plain_password) == hashed_password
+
+def get_user_by_username(db: Session, username: str):
+    return db.query(models.User).filter(models.User.username == username).first()
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+def get_user_by_firebase_uid(db: Session, firebase_uid: str):
+    return db.query(models.User).filter(models.User.firebase_uid == firebase_uid).first()
+
+def get_user(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+def create_user(db: Session, user: schemas.UserCreate):
+    # Check if username or email already exists
+    existing_user = db.query(models.User).filter(
+        or_(models.User.username == user.username, models.User.email == user.email)
+    ).first()
+    
+    if existing_user:
+        return None  # User already exists
+    
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(
+        username=user.username,
+        email=user.email,
+        password_hash=hashed_password,
+        full_name=user.full_name
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def authenticate_user(db: Session, username: str, password: str):
+    """Authenticate user with username and password"""
+    user = get_user_by_username(db, username)
+    if not user:
+        return None
+    if not verify_password(password, user.password_hash):
+        return None
+    
+    # Update last login
+    user.last_login = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+    return user
+
+def update_user_firebase_uid(db: Session, user_id: int, firebase_uid: str):
+    """Update user's Firebase UID after successful Firebase registration"""
+    user = get_user(db, user_id)
+    if user:
+        user.firebase_uid = firebase_uid
+        db.commit()
+        db.refresh(user)
+    return user
+
+# Session CRUD Operations
+def create_session(db: Session, session: schemas.SessionCreate) -> models.UserSession:
+    """Create new user session"""
+    session_token = secrets.token_urlsafe(32)
+    
+    # Deactivate old sessions for this user
+    db.query(models.UserSession).filter(
+        models.UserSession.user_id == session.user_id,
+        models.UserSession.is_active == True
+    ).update({"is_active": False})
+    
+    db_session = models.UserSession(
+        user_id=session.user_id,
+        firebase_token=session.firebase_token,
+        session_token=session_token,
+        expires_at=session.expires_at,
+        is_active=True
+    )
+    db.add(db_session)
+    db.commit()
+    db.refresh(db_session)
+    return db_session
+
+def get_session_by_token(db: Session, session_token: str):
+    """Get active session by token"""
+    return db.query(models.UserSession).filter(
+        models.UserSession.session_token == session_token,
+        models.UserSession.is_active == True,
+        models.UserSession.expires_at > datetime.utcnow()
+    ).first()
+
+def get_valid_session(db: Session, session_token: str):
+    """Get valid session with user details"""
+    from sqlalchemy.orm import joinedload
+    
+    session = db.query(models.UserSession).options(
+        joinedload(models.UserSession.user)
+    ).filter(
+        models.UserSession.session_token == session_token,
+        models.UserSession.is_active == True,
+        models.UserSession.expires_at > datetime.utcnow()
+    ).first()
+    return session
+
+def invalidate_session(db: Session, session_token: str):
+    """Invalidate a session (logout)"""
+    session = get_session_by_token(db, session_token)
+    if session:
+        session.is_active = False
+        db.commit()
+    return session
