@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from .database import Base
 
 class Patient(Base):
@@ -11,3 +13,33 @@ class Patient(Base):
     diagnosis = Column(String, nullable=True)
     tindakan = Column(String, nullable=True)
     dokter = Column(String, nullable=True)
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    password_hash = Column(String, nullable=False)  # Hashed password
+    firebase_uid = Column(String, unique=True, index=True, nullable=True)  # Firebase UID
+    full_name = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=func.now())
+    last_login = Column(DateTime, nullable=True)
+    
+    # Relationships
+    sessions = relationship("UserSession", back_populates="user")
+
+class UserSession(Base):
+    __tablename__ = "user_sessions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    firebase_token = Column(Text, nullable=False)  # Firebase ID token
+    session_token = Column(String, unique=True, index=True, nullable=False)  # Local session token
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    is_active = Column(Boolean, default=True)
+    
+    # Relationships
+    user = relationship("User", back_populates="sessions")

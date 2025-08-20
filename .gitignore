@@ -8,6 +8,11 @@ __pycache__/
 venv/
 .env
 
+# Firebase & Secrets
+secrets/
+serviceAccountKey.json
+*.json
+
 # IDE/editor
 .vscode/
 .idea/

@@ -5,10 +5,29 @@
     <meta charset="UTF-8">
     <title>Daftar Pasien</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
 </head>
 
-<body class="p-8">
-    <h1 class="text-2xl font-bold mb-4">Daftar Pasien</h1>
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header with User Info and Logout -->
+        <div class="flex justify-between items-center mb-6 bg-white rounded-lg shadow-md p-4">
+            <h1 class="text-2xl font-bold text-gray-800">🏥 MediNote - Daftar Pasien</h1>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-600">
+                    Selamat datang, <strong class="text-blue-600">{{ current_user.username }}</strong>
+                </span>
+                <a href="/auth/logout" 
+                   class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                    🚪 Logout
+                </a>
+            </div>
+        </div>
 
     <div class="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 class="text-lg font-semibold mb-4">Tambah Pasien Baru</h2>
@@ -63,40 +82,46 @@
         </form>
     </div>
 
-    <table class="table-auto border-collapse border border-gray-300 w-full">
-        <thead>
-            <tr class="bg-gray-200">
-                <th class="border p-2">ID</th>
-                <th class="border p-2">Nama</th>
-                <th class="border p-2">Tanggal Lahir</th>
-                <th class="border p-2">Tanggal Kunjungan</th>
-                <th class="border p-2">Diagnosis</th>
-                <th class="border p-2">Tindakan</th>
-                <th class="border p-2">Dokter</th>
-                <th class="border p-2">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for p in patients %}
-            <tr>
-                <td class="border p-2">{{ p.id }}</td>
-                <td class="border p-2">{{ p.nama }}</td>
-                <td class="border p-2">{{ p.tanggal_lahir }}</td>
-                <td class="border p-2">{{ p.tanggal_kunjungan }}</td>
-                <td class="border p-2">{{ p.diagnosis }}</td>
-                <td class="border p-2">{{ p.tindakan }}</td>
-                <td class="border p-2">{{ p.dokter }}</td>
-                <td class="border p-2">
-                    <a href="/edit/{{ p.id }}" class="bg-blue-500 text-white px-2 py-1 text-sm rounded mr-1">Edit</a>
-                    <form method="post" action="/delete/{{ p.id }}" class="inline" 
-                          onsubmit="return confirm('Yakin ingin menghapus pasien {{ p.nama }}?')">
-                        <button type="submit" class="bg-red-500 text-white px-2 py-1 text-sm rounded">Hapus</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</body>
-
-</html>
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="table-auto border-collapse w-full">
+            <thead>
+                <tr class="bg-blue-50 border-b border-blue-200">
+                    <th class="text-left p-3 font-medium text-blue-800">ID</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Nama</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Tanggal Lahir</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Tanggal Kunjungan</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Diagnosis</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Tindakan</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Dokter</th>
+                    <th class="text-left p-3 font-medium text-blue-800">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in patients %}
+                <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
+                    <td class="p-3 text-gray-700">{{ p.id }}</td>
+                    <td class="p-3 text-gray-700 font-medium">{{ p.nama }}</td>
+                    <td class="p-3 text-gray-600">{{ p.tanggal_lahir }}</td>
+                    <td class="p-3 text-gray-600">{{ p.tanggal_kunjungan }}</td>
+                    <td class="p-3 text-gray-700">{{ p.diagnosis }}</td>
+                    <td class="p-3 text-gray-700">{{ p.tindakan }}</td>
+                    <td class="p-3 text-gray-700">{{ p.dokter }}</td>
+                    <td class="p-3">
+                        <a href="/edit/{{ p.id }}" 
+                           class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded mr-2 transition duration-200">
+                            ✏️ Edit
+                        </a>
+                        <form method="post" action="/delete/{{ p.id }}" class="inline" 
+                              onsubmit="return confirm('Yakin ingin menghapus pasien {{ p.nama }}?')">
+                            <button type="submit" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded transition duration-200">
+                                🗑️ Hapus
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>

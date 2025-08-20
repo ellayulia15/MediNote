@@ -1,8 +1,22 @@
-fastapi
-uvicorn
-psycopg2-binary
-sqlalchemy
-jinja2
-python-multipart
-openpyxl
-python-dotenv
+# MediNote - Medical Records Management System
+# Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# Templates & Forms
+jinja2>=3.1.0
+python-multipart>=0.0.6
+
+# Authentication & Security
+firebase-admin>=6.2.0
+email-validator>=2.0.0
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Optional: Excel export functionality
+openpyxl>=3.1.0
