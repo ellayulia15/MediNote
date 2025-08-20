@@ -109,7 +109,7 @@
                 const userData = await response.json();
                 console.log('Login successful:', userData);
 
-                // Create simple session (simplified - no Firebase for now)
+                // Create simple session (no Firebase)
                 const sessionResponse = await fetch('/auth/create-session', {
                     method: 'POST',
                     headers: {
@@ -117,7 +117,7 @@
                     },
                     body: JSON.stringify({
                         user_id: userData.id,
-                        firebase_token: 'simple-session-token', // Simplified
+                        firebase_token: 'simple-session-token',
                         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
                     })
                 });

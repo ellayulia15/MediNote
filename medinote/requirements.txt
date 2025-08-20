@@ -20,3 +20,4 @@ python-dotenv>=1.0.0
 
 # Optional: Excel export functionality
 openpyxl>=3.1.0
+pandas>=2.0.0

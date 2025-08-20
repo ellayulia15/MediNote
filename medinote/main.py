@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Depends, Request, Form, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,9 @@ import firebase_admin
 from firebase_admin import credentials, auth
 from . import models, schemas, crud
 from .database import SessionLocal, engine
+import io
+import csv
+from datetime import datetime, date
 
 # Load environment variables
 load_dotenv()
@@ -188,13 +191,8 @@ def dashboard(
 
 @app.get("/patients")
 def patients_page(request: Request, current_user = Depends(require_view_permission), db: Session = Depends(get_db)):
-    """Patients page - show all patients with CRUD operations"""
-    patients = crud.get_patients(db)
-    return templates.TemplateResponse("patients.html", {
-        "request": request, 
-        "patients": patients,
-        "current_user": current_user
-    })
+    """Redirect patients page to dashboard - unified interface"""
+    return RedirectResponse("/dashboard", status_code=302)
 
 @app.get("/login")
 def login_page(request: Request, db: Session = Depends(get_db)):
@@ -408,6 +406,192 @@ def delete_patient_api(patient_id: int, user=Depends(verify_firebase_token), db:
     if not deleted_patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     return {"message": "Patient deleted successfully"}
+
+# --- Level 5: Integration Routes ---
+
+@app.post("/api/import/patients")
+def import_patients_dummy(current_user = Depends(require_doctor_role), db: Session = Depends(get_db)):
+    """Dummy endpoint untuk import pasien dari luar (Level 5)"""
+    
+    # Data dummy untuk simulasi import dari sistem luar
+    dummy_patients = [
+        {
+            "nama": "Ahmad Rizki",
+            "tanggal_lahir": "1985-03-15",
+            "tanggal_kunjungan": str(date.today()),
+            "diagnosis": "Hipertensi",
+            "tindakan": "Kontrol rutin, obat antihipertensi",
+            "dokter": "Dr. Sarah Ahmad"
+        },
+        {
+            "nama": "Siti Nurhaliza", 
+            "tanggal_lahir": "1992-07-22",
+            "tanggal_kunjungan": str(date.today()),
+            "diagnosis": "Diabetes Mellitus Type 2",
+            "tindakan": "Diet rendah gula, metformin",
+            "dokter": "Dr. Budi Santoso"
+        },
+        {
+            "nama": "Eko Prasetyo",
+            "tanggal_lahir": "1978-11-08", 
+            "tanggal_kunjungan": str(date.today()),
+            "diagnosis": "Gastritis",
+            "tindakan": "Obat maag, pola makan teratur",
+            "dokter": "Dr. Lisa Wijaya"
+        }
+    ]
+    
+    imported_count = 0
+    for patient_data in dummy_patients:
+        try:
+            patient = schemas.PatientCreate(**patient_data)
+            crud.create_patient(db, patient)
+            imported_count += 1
+        except Exception as e:
+            continue
+    
+    return {
+        "message": f"Successfully imported {imported_count} patients from external system",
+        "imported_count": imported_count,
+        "total_attempted": len(dummy_patients)
+    }
+
+@app.post("/api/import/patients/json")
+def import_patients_from_json(patients_data: list[dict], current_user = Depends(require_doctor_role), db: Session = Depends(get_db)):
+    """Import patients from JSON data provided by user (Level 5 Enhanced)"""
+    
+    if not patients_data:
+        raise HTTPException(status_code=400, detail="No patient data provided")
+    
+    imported_count = 0
+    errors = []
+    
+    for i, patient_data in enumerate(patients_data):
+        try:
+            # Validate required fields
+            required_fields = ['nama', 'tanggal_lahir', 'tanggal_kunjungan']
+            missing_fields = [field for field in required_fields if not patient_data.get(field)]
+            
+            if missing_fields:
+                errors.append(f"Patient {i+1}: Missing fields: {', '.join(missing_fields)}")
+                continue
+            
+            # Create patient schema
+            patient = schemas.PatientCreate(
+                nama=patient_data.get('nama'),
+                tanggal_lahir=patient_data.get('tanggal_lahir'),
+                tanggal_kunjungan=patient_data.get('tanggal_kunjungan'),
+                diagnosis=patient_data.get('diagnosis', ''),
+                tindakan=patient_data.get('tindakan', ''),
+                dokter=patient_data.get('dokter', '')
+            )
+            
+            crud.create_patient(db, patient)
+            imported_count += 1
+            
+        except Exception as e:
+            errors.append(f"Patient {i+1} ({patient_data.get('nama', 'Unknown')}): {str(e)}")
+    
+    result = {
+        "message": f"Import completed: {imported_count} patients imported successfully",
+        "imported_count": imported_count,
+        "total_attempted": len(patients_data),
+        "success_rate": f"{(imported_count/len(patients_data)*100):.1f}%" if patients_data else "0%"
+    }
+    
+    if errors:
+        result["errors"] = errors
+        result["message"] += f", {len(errors)} errors occurred"
+    
+    return result
+
+@app.get("/export/patients/excel")
+def export_patients_excel(
+    start_date: str = None,
+    end_date: str = None,
+    current_user = Depends(require_view_permission),
+    db: Session = Depends(get_db)
+):
+    """Export patients to Excel file (Level 5)"""
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Parse date filters (same logic as dashboard)
+        parsed_start_date = None
+        parsed_end_date = None
+        
+        if start_date:
+            try:
+                parsed_start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                parsed_end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
+            except ValueError:
+                pass
+        
+        # Get filtered patients data
+        patients = crud.get_patients_by_date_range(db, parsed_start_date, parsed_end_date)
+        
+        # Convert to DataFrame
+        data = []
+        for patient in patients:
+            data.append({
+                "ID": patient.id,
+                "Nama Pasien": patient.nama,
+                "Tanggal Lahir": patient.tanggal_lahir,
+                "Tanggal Kunjungan": patient.tanggal_kunjungan, 
+                "Diagnosis": patient.diagnosis or "-",
+                "Tindakan": patient.tindakan or "-",
+                "Dokter": patient.dokter or "-"
+            })
+        
+        df = pd.DataFrame(data)
+        
+        # Create Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Data Pasien', index=False)
+            
+            # Auto-adjust columns width
+            worksheet = writer.sheets['Data Pasien']
+            for column in worksheet.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                worksheet.column_dimensions[column_letter].width = adjusted_width
+        
+        output.seek(0)
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"data_pasien_{timestamp}.xlsx"
+        
+        # Return Excel file
+        return Response(
+            content=output.getvalue(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except ImportError:
+        raise HTTPException(
+            status_code=500, 
+            detail="Excel export requires pandas and openpyxl. Please install with: pip install pandas openpyxl"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 # --- Firebase Auth Test Routes ---
 @app.get("/api/auth/protected")

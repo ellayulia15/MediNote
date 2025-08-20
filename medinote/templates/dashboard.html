@@ -19,9 +19,9 @@
         <div class="flex justify-between items-center mb-6 bg-white rounded-lg shadow-md p-4">
             <div>
                 <h1 class="text-2xl font-bold text-gray-800">🏥 MediNote - Dashboard</h1>
-                <p class="text-sm text-gray-600">Ringkasan dan Laporan Data Pasien</p>
+                <p class="text-sm text-gray-600">Kelola data pasien dan analisis laporan</p>
             </div>
-            
+
             <div class="flex items-center space-x-4">
                 <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     {{ current_user.role.value.title() }}
@@ -29,12 +29,8 @@
                 <span class="text-sm text-gray-600">
                     <strong class="text-blue-600">{{ current_user.username }}</strong>
                 </span>
-                <a href="/patients" 
-                   class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
-                    📋 Data Pasien
-                </a>
-                <a href="/auth/logout" 
-                   class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
+                <a href="/auth/logout"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200">
                     🚪 Logout
                 </a>
             </div>
@@ -42,117 +38,259 @@
 
         <!-- Dashboard Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Total Patients Card -->
+            <!-- Total Pasien Card -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 rounded-full">
-                        <span class="text-2xl">👥</span>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">Total Pasien</h3>
+                        <p class="text-3xl font-bold text-blue-600 mt-2">{{ statistics.total_patients }}</p>
+                        <p class="text-sm text-gray-500 mt-1">Keseluruhan pasien terdaftar</p>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-700">Total Pasien</h3>
-                        <p class="text-3xl font-bold text-blue-600">{{ statistics.total_patients }}</p>
-                        <p class="text-sm text-gray-500">Keseluruhan pasien terdaftar</p>
+                    <div class="text-4xl text-blue-500">
+                        👥
                     </div>
                 </div>
             </div>
 
-            <!-- Today's Patients Card -->
+            <!-- Pasien Hari Ini Card -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <span class="text-2xl">📅</span>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-700">Kunjungan Hari Ini</h3>
+                        <p class="text-3xl font-bold text-green-600 mt-2">{{ statistics.today_patients }}</p>
+                        <p class="text-sm text-gray-500 mt-1">Pasien yang berkunjung pada {{ today }}</p>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-lg font-medium text-gray-700">Pasien Hari Ini</h3>
-                        <p class="text-3xl font-bold text-green-600">{{ statistics.patients_today }}</p>
-                        <p class="text-sm text-gray-500">Kunjungan pada {{ today }}</p>
+                    <div class="text-4xl text-green-500">
+                        📅
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Filter Section -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">🔍 Filter Laporan</h2>
-            <form method="GET" action="/dashboard" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <!-- Add Patient Form - Only for Doctors -->
+        {% if current_user.role.value == "doctor" %}
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-lg font-semibold mb-4">📝 Tambah Pasien Baru</h2>
+            <form action="/add" method="post" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Mulai
-                    </label>
-                    <input type="date" 
-                           id="start_date" 
-                           name="start_date" 
-                           value="{{ start_date or '' }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="nama" class="block text-sm font-medium text-gray-700 mb-1">Nama Pasien</label>
+                    <input type="text" name="nama" id="nama" placeholder="Masukkan nama lengkap"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
-                
+
                 <div>
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
-                        Tanggal Selesai
+                    <label for="tanggal_lahir" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tanggal Lahir
+                        <span class="text-gray-500 text-xs">(tanggal kelahiran pasien)</span>
                     </label>
-                    <input type="date" 
-                           id="end_date" 
-                           name="end_date" 
-                           value="{{ end_date or '' }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="date" name="tanggal_lahir" id="tanggal_lahir"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
                 </div>
-                
-                <div class="flex space-x-2">
-                    <button type="submit" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-md transition duration-200">
-                        🔍 Filter
+
+                <div>
+                    <label for="tanggal_kunjungan" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tanggal Kunjungan
+                        <span class="text-gray-500 text-xs">(tanggal periksa/berobat)</span>
+                    </label>
+                    <input type="date" name="tanggal_kunjungan" id="tanggal_kunjungan"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required>
+                </div>
+
+                <div>
+                    <label for="diagnosis" class="block text-sm font-medium text-gray-700 mb-1">Diagnosis</label>
+                    <input type="text" name="diagnosis" id="diagnosis" placeholder="Diagnosis penyakit"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="tindakan" class="block text-sm font-medium text-gray-700 mb-1">Tindakan Medis</label>
+                    <input type="text" name="tindakan" id="tindakan" placeholder="Tindakan yang dilakukan"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="dokter" class="block text-sm font-medium text-gray-700 mb-1">Nama Dokter</label>
+                    <input type="text" name="dokter" id="dokter" placeholder="Dokter yang menangani"
+                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="md:col-span-2 lg:col-span-3">
+                    <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-md transition duration-200">
+                        ➕ Tambah Pasien
                     </button>
-                    <a href="/dashboard" 
-                       class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-md transition duration-200">
-                        🔄 Reset
-                    </a>
                 </div>
             </form>
+        </div>
+        {% else %}
+        <!-- Admin View - No Add Form -->
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center">
+                <span class="text-yellow-600">⚠️</span>
+                <p class="ml-2 text-yellow-800">
+                    <strong>Admin View:</strong> Anda hanya dapat melihat data pasien. Fitur tambah/edit/hapus hanya
+                    tersedia untuk role Doctor.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Filter Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">🔍 Filter Laporan</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
+                    <input type="date" id="start_date" name="start_date" value="{{ start_date or '' }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
+                    <input type="date" id="end_date" name="end_date" value="{{ end_date or '' }}"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="flex space-x-2">
+                    <button onclick="filterPatients()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg transition duration-200">
+                        🔍 Filter
+                    </button>
+                    <button onclick="resetFilter()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-lg transition duration-200">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export Section (Only for Doctors) -->
+        {% if current_user.role.value == "doctor" %}
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">📤 Import Data Pasien dari JSON</h3>
+
+            <form id="importForm">
+                <div class="mb-4">
+                    <label for="jsonData" class="block text-sm font-medium text-gray-700 mb-2">Data JSON Pasien</label>
+                    <textarea id="jsonData" name="jsonData" rows="8"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
+                        placeholder="Paste data JSON di sini, contoh:
+[
+  {
+    &quot;nama&quot;: &quot;John Doe&quot;,
+    &quot;tanggal_lahir&quot;: &quot;1990-05-15&quot;,
+    &quot;tanggal_kunjungan&quot;: &quot;2025-08-20&quot;,
+    &quot;diagnosis&quot;: &quot;Flu&quot;,
+    &quot;tindakan&quot;: &quot;Istirahat, minum obat&quot;,
+    &quot;dokter&quot;: &quot;Dr. Smith&quot;
+  }
+]"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Format: Array JSON dengan field nama, tanggal_lahir, tanggal_kunjungan, diagnosis, tindakan,
+                        dokter
+                    </p>
+                </div>
+
+                <div class="flex space-x-4">
+                    <button type="button" onclick="importPatientsFromJSON()"
+                        class="bg-green-500 hover:bg-green-600 text-white font-medium px-6 py-2 rounded-lg transition duration-200">
+                        📥 Import Data
+                    </button>
+                    <button type="button" onclick="clearImportForm()"
+                        class="bg-gray-500 hover:bg-gray-600 text-white font-medium px-4 py-2 rounded-lg transition duration-200">
+                        🗑️ Clear
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Export Section (For All Users) -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">📊 Export Data</h3>
+
+            <div class="flex space-x-4">
+                <button onclick="exportToExcel()"
+                    class="bg-blue-500 hover:bg-blue-600 text-white font-medium px-6 py-2 rounded-lg transition duration-200">
+                    📄 Export ke Excel
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-2">
+                Export akan menggunakan filter tanggal yang dipilih di atas (jika ada)
+            </p>
         </div>
 
         <!-- Patients Table -->
         <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200">
                 <h2 class="text-lg font-semibold text-gray-800">
-                    📋 Detail Pasien
+                    📋 Daftar Pasien
                     {% if start_date or end_date %}
-                        <span class="text-sm font-normal text-gray-600">
-                            ({{ filtered_patients|length }} hasil)
-                        </span>
+                    <span class="text-sm font-normal text-gray-600">
+                        ({{ filtered_patients|length }} hasil)
+                    </span>
                     {% endif %}
                 </h2>
             </div>
-            
+
             <div class="overflow-x-auto">
                 <table class="table-auto border-collapse w-full">
                     <thead>
                         <tr class="bg-blue-50 border-b border-blue-200">
                             <th class="text-left p-3 font-medium text-blue-800">ID</th>
                             <th class="text-left p-3 font-medium text-blue-800">Nama</th>
+                            <th class="text-left p-3 font-medium text-blue-800">Tanggal Lahir</th>
                             <th class="text-left p-3 font-medium text-blue-800">Tanggal Kunjungan</th>
                             <th class="text-left p-3 font-medium text-blue-800">Diagnosis</th>
                             <th class="text-left p-3 font-medium text-blue-800">Tindakan</th>
                             <th class="text-left p-3 font-medium text-blue-800">Dokter</th>
+                            {% if current_user.role.value == "doctor" %}
+                            <th class="text-left p-3 font-medium text-blue-800">Aksi</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% if filtered_patients %}
-                            {% for p in filtered_patients %}
-                            <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
-                                <td class="p-3 text-gray-700">{{ p.id }}</td>
-                                <td class="p-3 text-gray-700 font-medium">{{ p.nama }}</td>
-                                <td class="p-3 text-gray-600">{{ p.tanggal_kunjungan }}</td>
-                                <td class="p-3 text-gray-700">{{ p.diagnosis or '-' }}</td>
-                                <td class="p-3 text-gray-700">{{ p.tindakan or '-' }}</td>
-                                <td class="p-3 text-gray-700">{{ p.dokter or '-' }}</td>
-                            </tr>
-                            {% endfor %}
+                        {% for p in filtered_patients %}
+                        <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
+                            <td class="p-3 text-gray-700">{{ p.id }}</td>
+                            <td class="p-3 text-gray-700 font-medium">{{ p.nama }}</td>
+                            <td class="p-3 text-gray-600">{{ p.tanggal_lahir }}</td>
+                            <td class="p-3 text-gray-600">{{ p.tanggal_kunjungan }}</td>
+                            <td class="p-3 text-gray-700">{{ p.diagnosis or '-' }}</td>
+                            <td class="p-3 text-gray-700">{{ p.tindakan or '-' }}</td>
+                            <td class="p-3 text-gray-700">{{ p.dokter or '-' }}</td>
+                            {% if current_user.role.value == "doctor" %}
+                            <td class="p-3">
+                                <div class="flex gap-2 items-center">
+                                    <a href="/edit/{{ p.id }}"
+                                        class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 text-sm rounded transition duration-200 flex items-center">
+                                        ✏️
+                                    </a>
+                                    <form method="post" action="/delete/{{ p.id }}" class="inline"
+                                        onsubmit="return confirm('Yakin ingin menghapus pasien {{ p.nama }}?')">
+                                        <button type="submit"
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 text-sm rounded transition duration-200 flex items-center">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
                         {% else %}
-                            <tr>
-                                <td colspan="6" class="p-8 text-center text-gray-500">
-                                    📋 Tidak ada data pasien untuk filter yang dipilih
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="{% if current_user.role.value == 'doctor' %}8{% else %}7{% endif %}"
+                                class="p-8 text-center text-gray-500">
+                                📋 Tidak ada data pasien untuk filter yang dipilih
+                            </td>
+                        </tr>
                         {% endif %}
                     </tbody>
                 </table>
@@ -168,11 +306,11 @@
                     <h3 class="font-medium text-blue-800">Ringkasan Filter</h3>
                     <p class="text-sm text-blue-700">
                         {% if start_date and end_date %}
-                            Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai {{ end_date }}
+                        Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai {{ end_date }}
                         {% elif start_date %}
-                            Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai sekarang
+                        Menampilkan {{ filtered_patients|length }} pasien dari {{ start_date }} sampai sekarang
                         {% elif end_date %}
-                            Menampilkan {{ filtered_patients|length }} pasien sampai {{ end_date }}
+                        Menampilkan {{ filtered_patients|length }} pasien sampai {{ end_date }}
                         {% endif %}
                     </p>
                 </div>
@@ -180,6 +318,114 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+        // Clear import form
+        function clearImportForm() {
+            document.getElementById('jsonData').value = '';
+        }
+
+        // Import patients from JSON data
+        async function importPatientsFromJSON() {
+            const jsonData = document.getElementById('jsonData').value.trim();
+
+            if (!jsonData) {
+                alert('⚠️ Mohon masukkan data JSON terlebih dahulu');
+                return;
+            }
+
+            try {
+                // Validate JSON format
+                const parsedData = JSON.parse(jsonData);
+                if (!Array.isArray(parsedData)) {
+                    throw new Error('Data harus berupa array JSON');
+                }
+
+                // Basic validation for required fields
+                for (let i = 0; i < parsedData.length; i++) {
+                    const patient = parsedData[i];
+                    if (!patient.nama || !patient.tanggal_lahir || !patient.tanggal_kunjungan) {
+                        throw new Error(`Patient ke-${i + 1}: Field nama, tanggal_lahir, dan tanggal_kunjungan wajib diisi`);
+                    }
+                }
+
+                const response = await fetch('/api/import/patients/json', {
+                    body: jsonData,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Import failed');
+                }
+
+                const result = await response.json();
+                alert(`✅ Import berhasil!\n${result.message}`);
+
+                // Reload page to show new data
+                window.location.reload();
+            } catch (error) {
+                alert('❌ Import gagal: ' + error.message);
+            }
+        }
+
+        // Filter patients by date range
+        function filterPatients() {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+
+            // Build URL with filter parameters
+            let filterUrl = '/dashboard';
+            const params = new URLSearchParams();
+
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            if (params.toString()) {
+                filterUrl += '?' + params.toString();
+            }
+
+            window.location.href = filterUrl;
+        }
+
+        // Reset filter
+        function resetFilter() {
+            document.getElementById('start_date').value = '';
+            document.getElementById('end_date').value = '';
+            window.location.href = '/dashboard';
+        }
+
+        // Export patients to Excel
+        function exportToExcel() {
+            // Get current filter values
+            const startDate = document.getElementById('start_date')?.value || '';
+            const endDate = document.getElementById('end_date')?.value || '';
+
+            // Build export URL with filters
+            let exportUrl = '/export/patients/excel';
+            const params = new URLSearchParams();
+
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            if (params.toString()) {
+                exportUrl += '?' + params.toString();
+            }
+
+            // Create temporary link and trigger download
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.download = '';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Show feedback
+            alert('📊 File Excel sedang didownload...');
+        }
+    </script>
 </body>
 
 </html>

@@ -7,7 +7,7 @@ from . import models, schemas
 
 # Patient CRUD Operations
 def get_patients(db: Session):
-    return db.query(models.Patient).all()
+    return db.query(models.Patient).order_by(models.Patient.id).all()
 
 def get_patients_by_date_range(db: Session, start_date: date = None, end_date: date = None):
     """Get patients filtered by date range"""
@@ -18,7 +18,7 @@ def get_patients_by_date_range(db: Session, start_date: date = None, end_date: d
     if end_date:
         query = query.filter(models.Patient.tanggal_kunjungan <= end_date)
     
-    return query.order_by(models.Patient.tanggal_kunjungan.desc()).all()
+    return query.order_by(models.Patient.id).all()
 
 def get_dashboard_statistics(db: Session):
     """Get dashboard statistics for Level 4 requirements"""
@@ -28,13 +28,13 @@ def get_dashboard_statistics(db: Session):
     total_patients = db.query(func.count(models.Patient.id)).scalar()
     
     # Patients today
-    patients_today = db.query(func.count(models.Patient.id)).filter(
+    today_patients = db.query(func.count(models.Patient.id)).filter(
         models.Patient.tanggal_kunjungan == today
     ).scalar()
     
     return {
         "total_patients": total_patients or 0,
-        "patients_today": patients_today or 0
+        "today_patients": today_patients or 0
     }
 
 def get_patient(db: Session, patient_id: int):
