@@ -1,7 +1,13 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+import enum
 from .database import Base
+
+# Role Enum for RBAC
+class UserRole(str, enum.Enum):
+    DOCTOR = "doctor"
+    ADMIN = "admin"
 
 class Patient(Base):
     __tablename__ = "patients"
@@ -21,6 +27,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)  # Hashed password
+    role = Column(Enum(UserRole), default=UserRole.DOCTOR, nullable=False)  # RBAC Role
     firebase_uid = Column(String, unique=True, index=True, nullable=True)  # Firebase UID
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)

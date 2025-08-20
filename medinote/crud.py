@@ -71,6 +71,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         username=user.username,
         email=user.email,
         password_hash=hashed_password,
+        role=user.role,
         full_name=user.full_name
     )
     db.add(db_user)
@@ -152,3 +153,23 @@ def invalidate_session(db: Session, session_token: str):
         session.is_active = False
         db.commit()
     return session
+
+# Role-Based Access Control (RBAC) Functions
+def check_user_permission(user, required_permission: str) -> bool:
+    """Check if user has required permission based on role"""
+    if user.role == models.UserRole.DOCTOR:
+        # Doctor can do everything
+        return True
+    elif user.role == models.UserRole.ADMIN:
+        # Admin can only view
+        return required_permission == "view"
+    return False
+
+def require_permission(user, permission: str):
+    """Raise exception if user doesn't have required permission"""
+    if not check_user_permission(user, permission):
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Access denied. {user.role.value.title()} role cannot {permission} patients."
+        )
